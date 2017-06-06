@@ -11,6 +11,9 @@ import socket
 import select
 from threading import Timer
 
+import serial
+
+ard = serial.Serial('/dev/ttyACM0', 115200)
 
 # Settable parameters
 MTU = 1000 # Maximum Transmit Unit for this medium (B)
@@ -36,19 +39,20 @@ def node():
                 sys.exit()
               else:
                 print("\nReceive a packet : %s" % data)
-                sys.stdout.write('Press ENTER key for transmitting a packet or type \'quit\' to end this program. : '); sys.stdout.flush()
+		if(data == 'OPEN') :
+		  ard.write('OPEN')
+		  transmit(s, 'ok')
+		if(data == 'QUIT') :
+		  s.close()
+		  sys.exit()
             else:
-              cmd = sys.stdin.readline()
-              if cmd == 'quit\n':
-                s.close()
-                sys.exit()
-              trans_data = 'DATA' # Data will be stored in packet
-              transmit(s,trans_data) # Transmit a data packet
-              sys.stdout.write('Press ENTER key for transmitting a packet or type \'quit\' to end this program. : '); sys.stdout.flush()
-              
+              """
+               here we should write switch condition and face detection function
+              """
 # Connect a node to medium ----- recommand not to modify
 def connect_to_medium():
-  host = '127.0.0.1' # Local host address
+  #host = '127.0.0.1' # Local host address
+  host = '192.168.43.243'
   port = 9009 # Medium port number
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
