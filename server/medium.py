@@ -43,7 +43,8 @@ def medium():
             sockfd, addr = medium_socket.accept()
             SOCKET_LIST.append(sockfd)
             print("Node (%s, %s) connected" % addr)
-            
+            message_queues[sockfd] = 'QUIT'
+            OUTPUT_LIST.append(sockfd)
           # A message from a node, not a new connection
           else: # 127.0.0.1 : 9009 (sock)
             try:
