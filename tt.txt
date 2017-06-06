@@ -1,0 +1,88 @@
+#include <DHT11.h>
+#include<Servo.h>
+int pin=2;
+int speakerpin = 10; //스피커가 연결된 디지털핀 설정
+int door = 12;
+String inputString = "";
+boolean flag = HIGH;
+int Sw_Pin=9;
+int SW_state = 1;
+int door_state = 0;
+int emg=0;
+
+
+Servo myservo;
+DHT11 dht11(pin);        
+ 
+void setup() {                
+  Serial.begin(9600);
+  pinMode(Sw_Pin, INPUT);
+  pinMode(door, OUTPUT);   
+  myservo.attach(11); 
+  myservo.write(110); 
+}
+ 
+void loop() 
+{
+  int err;
+  float temp, humi;
+  
+  if((err=dht11.read(humi, temp))==0)
+  {
+    Serial.print("temperature:");
+    Serial.print(temp);
+    Serial.print("  humidity:");
+    Serial.print(humi);
+    if(temp>=50)
+    {
+      tone(speakerpin,1000,1000);  //500: 음의 높낮이(주파수), 1000: 음의 지속시간(1초)
+      delay(1000); 
+      if (emg==0)
+      {
+      Serial.print("open\n");
+      doorOpen();
+      emg=1;
+      delay(1000);
+      myservo.write(30);
+      }
+    }
+    Serial.println();
+  }
+  else                             
+  {
+    Serial.println();
+    Serial.print("Error No :");
+    Serial.print(err);
+    Serial.println();    
+  }
+  delay(100);
+  
+  
+  if(SW_state != (int)digitalRead(Sw_Pin))
+  {
+       if(SW_state == 1)
+       {
+         Serial.print("open\n");
+         doorOpen();
+       }
+       SW_state = !SW_state;
+  }
+}
+ 
+void doorOpen() {
+/* 
+  if(door_state == 0)
+  {
+    digitalWrite(door, HIGH);
+    door_state = 1;
+  }
+  else
+  {
+    digitalWrite(door, LOW);
+    door_state = 0;
+  }*/
+   digitalWrite(door, HIGH);
+   Serial.print("Reached\n");
+  delay(500);
+  digitalWrite(door, LOW);
+}
