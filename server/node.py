@@ -13,7 +13,7 @@ from threading import Timer
 
 import serial
 
-ard = serial.Serial('/dev/ttyACM0', 115200)
+ard = serial.Serial('/dev/ttyACM0', 9600)
 
 # Settable parameters
 MTU = 1000 # Maximum Transmit Unit for this medium (B)
