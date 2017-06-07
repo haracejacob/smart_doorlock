@@ -9,7 +9,7 @@ import optparse
 import tornado.wsgi
 import tornado.httpserver
 import numpy as np
-import pandas as pd
+#import pandas as pd
 from flask import jsonify
 from PIL import Image
 import cStringIO as StringIO
@@ -74,7 +74,6 @@ def classify_upload():
             result=(False, 'Cannot open uploaded image.')
         )
     image = caffe.io.load_image(filename, color=True)
-    image = image[:,:,(2,1,0)]
 
     result = app.clf.classify_image(image)
     
@@ -103,7 +102,6 @@ def classify_rest():
             result=(False, 'Cannot open uploaded image.')
         )
     image = caffe.io.load_image(filename, color=True)
-    image = image[:,:,(2,1,0)]
 
     result = app.clf.classify_image(image)
     
@@ -114,10 +112,10 @@ def classify_rest():
 @app.route('/rest', methods=['GET'])
 def rest():
     imagefile = flask.request.files['imagefile']
-        filename_ = str(datetime.datetime.now()).replace(' ', '_') + \
-            werkzeug.secure_filename(imagefile.filename)
-        filename = os.path.join(UPLOAD_FOLDER, filename_)
-        imagefile.save(filename)
+    filename_ = str(datetime.datetime.now()).replace(' ', '_') + \
+        werkzeug.secure_filename(imagefile.filename)
+    filename = os.path.join(UPLOAD_FOLDER, filename_)
+    imagefile.save(filename)
     return jsonify(
 	test = 'hi',
 	test2 = 'hi2'
@@ -125,7 +123,7 @@ def rest():
 
 def embed_image_html(image):
     """Creates an image embedded in HTML base64 format."""
-    image = image[:,:,(2,1,0)]
+    #image = image[:,:,(2,1,0)]
     image_pil = Image.fromarray((255 * image).astype('uint8'))
     image_pil = image_pil.resize((256, 256))
     string_buf = StringIO.StringIO()
@@ -163,22 +161,31 @@ class ImagenetClassifier(object):
         else:
             caffe.set_mode_cpu()
 
-	self.net = caffe.Classifier(model_def_file, pretrained_model_file, image_dims=(227, 227), raw_scale=255)
+	#self.net = caffe.Classifier(model_def_file, pretrained_model_file, image_dims=(227, 227), raw_scale=255)
+	self.net = caffe.Net(model_def_file, pretrained_model_file, caffe.TEST)	
 	transformer = caffe.io.Transformer({'data': self.net.blobs['data'].data.shape})
-        #transformer.set_transpose('data', (2, 0, 1))  # convert to Channel Width Height
+        transformer.set_transpose('data', (2, 0, 1))  # convert to Channel Width Height
         transformer.set_channel_swap('data', (2, 1, 0))  # swap channels from RGB to BGR
         self.image_transformer = transformer
 
     def classify_image(self, image):
         try:
             starttime = time.time()
-	    
-            scores = self.net.predict([image], oversample=False)
+	    transformed_image = self.image_transformer.preprocess('data', image)
+            transformed_image *= 256
+            transformed_image = transformed_image.astype(np.uint8).astype(np.float32)
+        
+            self.net.blobs['data'].data[...] = transformed_image
+            res = self.net.forward()
+            scores = res['prob']	    
+
+
+            #scores = self.net.predict([image], oversample=False)
             endtime = time.time()
 	 
-	    meta = [['our family', scores[0,0]],
-		    ['not our family', scores[0,1]]]
-            logging.info('result: %s', str(scores[0,0] + scores[0,1]))
+	    meta = [['our family', scores[0,1]],
+		    ['not our family', scores[0,0]]]
+            logging.info('result: %s', str(scores[0,1] + scores[0,0]))
 
             return (True, meta, '%.3f' % (endtime - starttime))
 
