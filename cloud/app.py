@@ -104,21 +104,17 @@ def classify_rest():
     image = caffe.io.load_image(filename, color=True)
 
     result = app.clf.classify_image(image)
-    
-    return flask.render_template(
-        'index.html', has_result=True, result=result,
-        imagesrc=embed_image_html(image)
-    )
-@app.route('/rest', methods=['GET'])
-def rest():
-    imagefile = flask.request.files['imagefile']
-    filename_ = str(datetime.datetime.now()).replace(' ', '_') + \
-        werkzeug.secure_filename(imagefile.filename)
-    filename = os.path.join(UPLOAD_FOLDER, filename_)
-    imagefile.save(filename)
+    print result[1][0], result[1][1]
+#    print result[1][1][1] > result[1][0][1]
+    if result[1][0][1] > result[1][1][1] :
+	print 'Our Family'
+        val = 1
+    else :
+	print 'Not Our Family'
+        val = 0
+
     return jsonify(
-	test = 'hi',
-	test2 = 'hi2'
+	val = val
     )
 
 def embed_image_html(image):
@@ -178,14 +174,14 @@ class ImagenetClassifier(object):
             self.net.blobs['data'].data[...] = transformed_image
             res = self.net.forward()
             scores = res['prob']	    
-
+	    print scores
 
             #scores = self.net.predict([image], oversample=False)
             endtime = time.time()
 	 
-	    meta = [['our family', scores[0,1]],
-		    ['not our family', scores[0,0]]]
-            logging.info('result: %s', str(scores[0,1] + scores[0,0]))
+	    meta = [['our family', scores[0,0]],
+		    ['not our family', scores[0,1]]]
+            logging.info('result: %s', str(scores[0,0] + scores[0,1]))
 
             return (True, meta, '%.3f' % (endtime - starttime))
 
