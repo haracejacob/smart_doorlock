@@ -6,7 +6,7 @@ Kim Dong Min
 
 Kim Geun Tae
 
-Noh Yeong Bin
+Noh Young Bin
 
 Kim Byung Jun
 
